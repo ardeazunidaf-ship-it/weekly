@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard — Panel Admin</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span class="login-dot"></span> PANEL</div>
+
+    <div class="nav-group">
+      <div class="nav-label">Menu</div>
+      <a href="dashboard.html" class="nav-link active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a href="data.html" class="nav-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg>
+        Data Produk
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-label">Akun</div>
+      <a href="#" class="nav-link" id="openPasswordModal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Ganti Password
+      </a>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="btn btn-danger btn-sm" style="width:100%" id="logoutBtn">Keluar</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <div class="breadcrumb">PANEL / DASHBOARD</div>
+        <h2>Ringkasan</h2>
+      </div>
+      <div class="session-pill">
+        <div class="session-avatar" id="avatarInitial">A</div>
+        <div>
+          <div id="sessionUser">admin</div>
+          <div class="session-time">Aktif · <span id="sessionTimer">00:00</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-grid">
+      <div class="stat-card">
+        <div class="label">Total Produk</div>
+        <div class="value" id="statTotal">0</div>
+        <div class="delta">di seluruh katalog</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Stok Menipis</div>
+        <div class="value" id="statLow">0</div>
+        <div class="delta warn">≤ 10 unit</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Kategori</div>
+        <div class="value" id="statCategories">0</div>
+        <div class="delta">jenis berbeda</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Nilai Stok</div>
+        <div class="value" id="statValue">Rp0</div>
+        <div class="delta">estimasi total</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h3>Aktivitas Cepat</h3>
+      <p style="color:var(--muted); font-size:13px; margin-bottom:14px;">
+        Kelola data produk, ubah stok, atau tambahkan item baru dari halaman Data Produk.
+      </p>
+      <a href="data.html" class="btn btn-ghost btn-sm">Buka Data Produk →</a>
+    </div>
+  </main>
+</div>
+
+<!-- Modal Ganti Password -->
+<div class="modal-overlay" id="passwordModalOverlay">
+  <div class="modal">
+    <h3>Ganti Password</h3>
+    <form id="passwordForm">
+      <div class="field">
+        <label>Password Lama</label>
+        <input type="password" id="oldPassword" required>
+      </div>
+      <div class="field">
+        <label>Password Baru</label>
+        <input type="password" id="newPassword" required minlength="4">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" id="cancelPasswordModal">Batal</button>
+        <button type="submit" class="btn btn-primary">Simpan</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script src="assets/js/data.js"></script>
+<script>
+  requireAuth();
+
+  (async function () {
+    await initProductData();
+    renderStats();
+  })();
+
+  const session = getSession();
+  if (session) {
+    document.getElementById('sessionUser').textContent = session.username;
+    document.getElementById('avatarInitial').textContent = session.username.charAt(0).toUpperCase();
+  }
+
+  setInterval(() => {
+    const s = getSession();
+    if (s) document.getElementById('sessionTimer').textContent = formatDuration(Date.now() - s.loginAt);
+  }, 1000);
+
+  function renderStats() {
+    const products = getProducts();
+    document.getElementById('statTotal').textContent = products.length;
+    document.getElementById('statLow').textContent = products.filter(p => p.stok <= 10).length;
+    document.getElementById('statCategories').textContent = new Set(products.map(p => p.kategori)).size;
+    const totalValue = products.reduce((sum, p) => sum + p.stok * p.harga, 0);
+    document.getElementById('statValue').textContent = formatRupiah(totalValue);
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', () => logout());
+
+  const overlay = document.getElementById('passwordModalOverlay');
+  document.getElementById('openPasswordModal').addEventListener('click', (e) => {
+    e.preventDefault();
+    overlay.classList.add('show');
+  });
+  document.getElementById('cancelPasswordModal').addEventListener('click', () => overlay.classList.remove('show'));
+
+  document.getElementById('passwordForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const oldPass = document.getElementById('oldPassword').value;
+    const newPass = document.getElementById('newPassword').value;
+    const result = changePassword(oldPass, newPass);
+    if (result.ok) {
+      showToast(result.message, 'success');
+      overlay.classList.remove('show');
+      this.reset();
+    } else {
+      showToast(result.message, 'error');
+    }
+  });
+</script>
+</body>
+</html>

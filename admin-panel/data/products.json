@@ -1,0 +1,7 @@
+[
+  { "id": 1, "nama": "Kopi Arabika 250g", "kategori": "Minuman", "stok": 42, "harga": 45000 },
+  { "id": 2, "nama": "Teh Hijau Premium", "kategori": "Minuman", "stok": 18, "harga": 32000 },
+  { "id": 3, "nama": "Keripik Singkong", "kategori": "Snack", "stok": 65, "harga": 15000 },
+  { "id": 4, "nama": "Madu Hutan 500ml", "kategori": "Sembako", "stok": 9, "harga": 85000 },
+  { "id": 5, "nama": "Sabun Herbal", "kategori": "Kebutuhan Harian", "stok": 30, "harga": 12000 }
+]

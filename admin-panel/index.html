@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Masuk — Panel Admin</title>
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+<div class="login-screen">
+  <div class="login-card">
+    <div class="login-mark"><span class="login-dot"></span> PANEL / AKSES ADMIN</div>
+    <h1>Selamat datang kembali</h1>
+    <p class="sub">Masuk untuk mengelola data dan pengaturan.</p>
+
+    <div id="errorMsg" class="error-msg"></div>
+
+    <form id="loginForm">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary">Masuk</button>
+    </form>
+
+    <div class="login-hint">
+      Demo login:<br>
+      username: <strong>admin</strong> · password: <strong>admin123</strong><br>
+      Ubah di <span class="mono">data/admin.json</span> sebelum deploy.
+    </div>
+  </div>
+</div>
+
+<script src="assets/js/ui.js"></script>
+<script src="assets/js/auth.js"></script>
+<script>
+  (async function () {
+    await initAdminCredentials();
+
+    // Jika sesi masih aktif, langsung ke dashboard
+    const session = getSession();
+    if (session && Date.now() - session.lastActivity < 5 * 60 * 1000) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('expired') === '1') {
+      showToast('Sesi berakhir karena tidak aktif. Silakan masuk kembali.', 'error');
+    }
+  })();
+
+  const errorMsg = document.getElementById('errorMsg');
+
+  document.getElementById('loginForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+
+    if (login(username, password)) {
+      showToast('Berhasil masuk. Mengalihkan…', 'success', 1200);
+      setTimeout(() => window.location.href = 'dashboard.html', 400);
+    } else {
+      errorMsg.textContent = 'Username atau password salah.';
+      errorMsg.classList.add('show');
+      showToast('Login gagal — periksa kembali kredensial Anda.', 'error');
+    }
+  });
+</script>
+</body>
+</html>
